@@ -41,11 +41,21 @@
         "aside.reel.assets": { "type": "string", "default": "", "description": "Resource directory override for Run Project, relative to the workspace folder. Empty uses the project's resources directory." }
       }
     },
-    "configurationDefaults": { "[aside]": { "editor.insertSpaces": true, "editor.tabSize": 4, "editor.defaultFormatter": "jhq223.aside", "editor.formatOnSave": true } }
+    "configurationDefaults": {
+      "[aside]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+        "editor.defaultFormatter": "jhq223.aside",
+        "editor.formatOnSave": true,
+        "editor.semanticHighlighting.enabled": true,
+        "editor.quickSuggestions": { "other": "on", "comments": "off", "strings": "off" },
+        "editor.inlineSuggest.suppressSuggestions": false
+      }
+    }
   },
   "scripts": {
     "check": "tsc --noEmit",
-    "test": "node --test scripts/project.test.mjs",
+    "test": "node --test scripts/*.test.mjs",
     "build": "node scripts/build.mjs",
     "vscode:prepublish": "npm run check && npm run build",
     "package": "vsce package --no-dependencies --allow-missing-repository"
@@ -56,6 +66,8 @@
     "@types/vscode": "1.100.0",
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.25.10",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vscode-oniguruma": "1.7.0",
+    "vscode-textmate": "9.3.2"
   }
 }

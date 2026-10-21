@@ -26,6 +26,8 @@ Run Project finds `reel` on PATH; `aside.reel.path` selects another executable. 
 
 Aside files use this extension as their default formatter and format when saved. Override `[aside].editor.formatOnSave` or `[aside].editor.defaultFormatter` in VS Code settings to choose another preference. Formatting uses the Rust compiler's lossless syntax tree, including for documents whose imports or names are unresolved.
 
+Compiler semantic highlighting uses the active theme's colors. Aside enables automatic code suggestions alongside inline suggestions; declaration and control-flow snippets use ordinary tab stops.
+
 ## Build
 
 Use Node.js 22 or newer. From the Reel repository, build the server:

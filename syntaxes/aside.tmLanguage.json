@@ -4,16 +4,22 @@
   "scopeName": "source.aside",
   "patterns": [
     { "include": "#comments" }, { "include": "#strings" },
-    { "name": "keyword.control.aside", "match": "\\b(?:if|else|while|for|in|loop|match|is|await|return|break|continue|throw|yield|try|catch|finally)\\b" },
-    { "name": "storage.modifier.aside", "match": "\\b(?:let|mut|async|gen|static|pub|use|as)\\b" },
-    { "match": "\\b(fn)\\s+([\\p{L}_][\\p{L}\\p{N}_]*)", "captures": { "1": { "name": "storage.type.aside" }, "2": { "name": "entity.name.function.aside" } } },
-    { "match": "\\b(class)\\s+([\\p{L}_][\\p{L}\\p{N}_]*)", "captures": { "1": { "name": "storage.type.aside" }, "2": { "name": "entity.name.type.aside" } } },
-    { "name": "constant.language.aside", "match": "\\b(?:true|false|null)\\b" },
-    { "name": "storage.type.aside", "match": "\\b(?:any|bool|int|float|string|array|table|Map|closure|Future|generator|Bytes|TextBuffer|ByteBuffer|Set|Range|Iterator|AsyncIterator|thread|weakref|instance|Binding)\\b" },
+    { "name": "keyword.control.aside", "match": "(?<![_\\p{XID_Continue}])(?:if|else|while|for|in|loop|match|is|await|return|break|continue|throw|yield|try|catch|finally)(?![_\\p{XID_Continue}])" },
+    { "name": "storage.modifier.aside", "match": "(?<![_\\p{XID_Continue}])(?:let|mut|async|gen|static|pub|use|as)(?![_\\p{XID_Continue}])" },
+    { "match": "(?<![_\\p{XID_Continue}])(fn)\\s+([_\\p{XID_Start}][_\\p{XID_Continue}]*)", "captures": { "1": { "name": "storage.type.aside" }, "2": { "name": "entity.name.function.aside" } } },
+    { "match": "(?<![_\\p{XID_Continue}])(class)\\s+([_\\p{XID_Start}][_\\p{XID_Continue}]*)", "captures": { "1": { "name": "storage.type.aside" }, "2": { "name": "entity.name.type.aside" } } },
+    { "name": "storage.type.aside", "match": "(?<![_\\p{XID_Continue}])(?:fn|class)(?![_\\p{XID_Continue}])" },
+    { "name": "constant.language.aside", "match": "(?<![_\\p{XID_Continue}])(?:true|false|null)(?![_\\p{XID_Continue}])" },
+    { "name": "storage.type.aside", "match": "(?<![_\\p{XID_Continue}])(?:any|bool|int|float|string|array|table|Map|closure|Future|generator|Bytes|TextBuffer|ByteBuffer|Set|Range|Iterator|AsyncIterator|thread|weakref|instance|Binding)(?![_\\p{XID_Continue}])" },
     { "name": "constant.numeric.aside", "match": "\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|[0-9][0-9_]*(?:\\.[0-9_]+)?(?:[eE][+-]?[0-9_]+)?)\\b" },
-    { "name": "entity.name.function.aside", "match": "[\\p{L}_][\\p{L}\\p{N}_]*(?=\\s*\\()" },
-    { "name": "variable.parameter.aside", "match": "[\\p{L}_][\\p{L}\\p{N}_]*(?=\\s*:(?!:))" },
-    { "name": "keyword.operator.aside", "match": "\\?\\?|\\?\\.|=>|->|::|\\.\\.=?|[+*/%=<>!&|^~-]+" }
+    { "match": "(\\?\\.|\\.)(\\s*)([_\\p{XID_Start}][_\\p{XID_Continue}]*)(?=\\s*\\??\\()", "captures": { "1": { "name": "keyword.operator.access.aside" }, "3": { "name": "entity.name.function.member.aside" } } },
+    { "match": "(\\?\\.|\\.)(\\s*)([_\\p{XID_Start}][_\\p{XID_Continue}]*)", "captures": { "1": { "name": "keyword.operator.access.aside" }, "3": { "name": "variable.other.property.aside" } } },
+    { "name": "entity.name.function.aside", "match": "[_\\p{XID_Start}][_\\p{XID_Continue}]*(?=\\s*\\??\\()" },
+    { "name": "variable.parameter.aside", "match": "[_\\p{XID_Start}][_\\p{XID_Continue}]*(?=\\s*:(?!:))" },
+    { "name": "variable.other.readwrite.aside", "match": "[_\\p{XID_Start}][_\\p{XID_Continue}]*" },
+    { "name": "keyword.operator.aside", "match": "\\?\\?|\\?\\.|\\?(?=[\\[(])|=>|->|::|\\.\\.\\.|\\.\\.=?|[+*/%=<>!&|^~-]+" },
+    { "name": "punctuation.section.aside", "match": "[{}\\[\\]()]" },
+    { "name": "punctuation.separator.aside", "match": "[,;:.]" }
   ],
   "repository": {
     "comments": { "patterns": [
@@ -22,10 +28,13 @@
       { "include": "#block-comment" }
     ] },
     "block-comment": { "name": "comment.block.aside", "begin": "/\\*", "end": "\\*/", "patterns": [{ "include": "#block-comment" }] },
-    "escape": { "name": "constant.character.escape.aside", "match": "\\\\(?:u\\{[0-9a-fA-F]+\\}|.)" },
+    "escape": { "patterns": [
+      { "name": "constant.character.escape.aside", "match": "\\\\(?:[\\\\\"nrt0]|u\\{[0-9a-fA-F]{1,6}\\})" },
+      { "name": "invalid.illegal.escape.aside", "match": "\\\\." }
+    ] },
     "interpolation": { "patterns": [
       { "name": "constant.character.escape.aside", "match": "\\{\\{|\\}\\}" },
-      { "name": "meta.interpolation.aside", "begin": "\\{", "end": "\\}", "patterns": [{ "include": "#nested-braces" }, { "include": "$self" }] }
+      { "name": "meta.interpolation.aside", "contentName": "meta.embedded.expression.aside", "begin": "\\{", "end": "\\}", "patterns": [{ "include": "#nested-braces" }, { "include": "$self" }] }
     ] },
     "nested-braces": { "begin": "\\{", "end": "\\}", "patterns": [{ "include": "#nested-braces" }, { "include": "$self" }] },
     "strings": { "patterns": [

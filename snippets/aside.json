@@ -1,8 +1,15 @@
 {
   "Function": { "prefix": "fn", "body": ["fn ${1:name}(${2:value}: ${3:int}) -> ${4:int} {", "    ${0:value}", "}"], "description": "Declare a function with parameter and return types." },
   "Main": { "prefix": "main", "body": ["fn main() {", "    $0", "}"], "description": "Reel entry function." },
+  "Class": { "prefix": "class", "body": ["class ${1:Name} {", "    $0", "}"], "description": "Declare a class." },
+  "Constructor": { "prefix": "init", "body": ["fn init(self${1:, value: int}) {", "    $0", "}"], "description": "Declare a class constructor with an explicit receiver." },
+  "Method": { "prefix": "method", "body": ["fn ${1:name}(self) {", "    $0", "}"], "description": "Declare an instance method with an explicit receiver." },
+  "If": { "prefix": "if", "body": ["if ${1:condition} {", "    $0", "}"], "description": "Run a block when its condition is true." },
+  "For": { "prefix": "for", "body": ["for ${1:item} in ${2:items} {", "    $0", "}"], "description": "Iterate over values with a fresh binding per iteration." },
+  "While": { "prefix": "while", "body": ["while ${1:condition} {", "    $0", "}"], "description": "Repeat a block while its condition is true." },
+  "Match": { "prefix": "match", "body": ["match ${1:value} {", "    ${2:pattern} => ${3:result},", "    _ => ${0:null},", "}"], "description": "Select a result with patterns and a fallback arm." },
   "Model": { "prefix": "model", "body": "let ${1:state} = model({${2:count}: ${3:0}});", "description": "Create observable state." },
-  "Derived text": { "prefix": "textderive", "body": "text(value: derive(|| f\"{${1:state.count}}\"));", "description": "Display a value and update when its observed dependencies change." },
-  "Button": { "prefix": "button", "body": ["button(\"${1:Continue}\", on_click: || {", "    $0", "});"], "description": "Handle a button activation." },
-  "Input actions": { "prefix": "input", "body": ["input(actions: {", "    ${1:back}: {", "        bindings: [\"Escape\", \"PointerSecondary\", \"East\"],", "        on_release: ${2:back},", "    },", "}) {", "    $0", "}"], "description": "Bind a semantic action for keyboard, mouse and gamepad." }
+  "Derived text": { "prefix": "textderive", "body": "text(value: derive(|| f\"{${1:state.count}}\"));", "description": "Insert a reactive text node into a children block." },
+  "Button": { "prefix": "button", "body": ["button(\"${1:Continue}\", on_click: || {", "    $0", "});"], "description": "Insert a button node into a children block." },
+  "Input actions": { "prefix": "input", "body": ["input(actions: {", "    ${1:back}: {", "        bindings: [\"Escape\", \"PointerSecondary\", \"East\"],", "        on_release: ${2:back},", "    },", "}) {", "    $0", "}"], "description": "Insert an input node with keyboard, mouse and gamepad actions into a children block." }
 }
