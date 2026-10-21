@@ -13,7 +13,7 @@
     "untrustedWorkspaces": {
       "supported": "limited",
       "description": "Syntax highlighting is available. Trust the workspace to launch its configured language server or run a story.",
-      "restrictedConfigurations": ["aside.server.path", "aside.server.args", "aside.reel.path", "aside.reel.assets", "aside.modules"]
+      "restrictedConfigurations": ["aside.server.path", "aside.server.args", "aside.reel.path", "aside.reel.assets"]
     },
     "virtualWorkspaces": { "supported": false }
   },
@@ -27,25 +27,25 @@
     "commands": [
       { "command": "aside.restartServer", "title": "Aside: Restart Language Server" },
       { "command": "aside.newFile", "title": "Aside: New File" },
-      { "command": "aside.runFile", "title": "Aside: Run Current File" }
+      { "command": "aside.runProject", "title": "Aside: Run Project" }
     ],
     "configuration": {
       "title": "Aside",
       "properties": {
         "aside.server.path": {
           "type": "string", "default": "", "scope": "machine-overridable",
-          "description": "Language server executable. Empty uses the bundled reel-lsp. Use aside-lsp for standalone Aside."
+          "description": "Language server executable. Empty uses reel-lsp from PATH, then the bundled server. Use aside-lsp for standalone Aside."
         },
         "aside.server.args": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Arguments passed directly to the language server process." },
-        "aside.modules": { "type": "object", "additionalProperties": { "type": "string" }, "default": {}, "description": "Import prefixes mapped to source directories, relative to the workspace folder." },
-        "aside.reel.path": { "type": "string", "default": "reel", "scope": "machine-overridable", "description": "Reel CLI executable used by Run Current File." },
-        "aside.reel.assets": { "type": "string", "default": "", "description": "Asset directory for Run Current File. Empty uses the current file's directory." }
+        "aside.reel.path": { "type": "string", "default": "reel", "scope": "machine-overridable", "description": "Reel CLI executable used by Run Project." },
+        "aside.reel.assets": { "type": "string", "default": "", "description": "Resource directory override for Run Project, relative to the workspace folder. Empty uses the project's resources directory." }
       }
     },
-    "configurationDefaults": { "[aside]": { "editor.insertSpaces": true, "editor.tabSize": 4 } }
+    "configurationDefaults": { "[aside]": { "editor.insertSpaces": true, "editor.tabSize": 4, "editor.defaultFormatter": "jhq223.aside", "editor.formatOnSave": true } }
   },
   "scripts": {
     "check": "tsc --noEmit",
+    "test": "node --test scripts/project.test.mjs",
     "build": "node scripts/build.mjs",
     "vscode:prepublish": "npm run check && npm run build",
     "package": "vsce package --no-dependencies --allow-missing-repository"

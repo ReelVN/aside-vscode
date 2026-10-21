@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { access } from "node:fs/promises";
 import type { SpawnOptionsWithoutStdio } from "node:child_process";
 import { LanguageClient, type LanguageClientOptions, type ServerOptions } from "vscode-languageclient/node";
+import { containsFile, findProjectRoot } from "./project";
 
 interface NativeDocument {
     text: string;
@@ -12,6 +13,21 @@ interface NativeDocument {
 let client: LanguageClient | undefined;
 let restart: Promise<void> = Promise.resolve();
 let watcher: vscode.FileSystemWatcher | undefined;
+
+async function findInstalledServer(): Promise<string | undefined> {
+    const executable = process.platform === "win32" ? "reel-lsp.exe" : "reel-lsp";
+    for (const directory of (process.env.PATH ?? "").split(path.delimiter)) {
+        if (!directory) continue;
+        const candidate = path.join(directory.replace(/^"|"$/g, ""), executable);
+        try {
+            await access(candidate);
+            return candidate;
+        } catch {
+            // Continue looking through the executable search path.
+        }
+    }
+    return undefined;
+}
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
     const output = vscode.window.createOutputChannel("Aside");
@@ -29,8 +45,9 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const config = vscode.workspace.getConfiguration("aside");
         const configured = config.get<string>("server.path", "");
         const bundled = path.join(context.extensionPath, "server", process.platform === "win32" ? "reel-lsp.exe" : "reel-lsp");
-        const command = configured || bundled;
-        if (!configured) {
+        const installed = configured ? undefined : await findInstalledServer();
+        const command = configured || installed || bundled;
+        if (!configured && !installed) {
             try {
                 await access(command);
             } catch {
@@ -46,7 +63,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         const options: LanguageClientOptions = {
             documentSelector: [{ scheme: "file", language: "aside" }, { scheme: "untitled", language: "aside" }],
             outputChannel: output,
-            initializationOptions: { modules: config.get<Record<string, string>>("modules", {}) },
             synchronize: { fileEvents: watcher },
         };
         const next = new LanguageClient("aside", "Aside", server, options);
@@ -89,42 +105,57 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
             const editor = await vscode.window.showTextDocument(document);
             editor.selection = new vscode.Selection(1, 4, 1, 4);
         }),
-        vscode.commands.registerCommand("aside.runFile", runFile),
+        vscode.commands.registerCommand("aside.runProject", runProject),
         vscode.workspace.onDidGrantWorkspaceTrust(queueRestart),
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration("aside.server") || event.affectsConfiguration("aside.modules")) void queueRestart();
+            if (event.affectsConfiguration("aside.server")) void queueRestart();
         }),
     );
     await queueRestart();
 }
 
-async function runFile(): Promise<void> {
+async function runProject(): Promise<void> {
     if (!vscode.workspace.isTrusted) {
         await vscode.window.showInformationMessage("Trust the workspace to run an Aside story.");
         return;
     }
-    let document = vscode.window.activeTextEditor?.document;
-    if (!document || document.languageId !== "aside" || document.uri.scheme === "aside-native") return;
-    if (document.isUntitled) {
-        await vscode.commands.executeCommand("workbench.action.files.save");
-        document = vscode.window.activeTextEditor?.document;
-        if (!document || document.languageId !== "aside" || document.uri.scheme !== "file") return;
-    } else if (!(await document.save()) || document.uri.scheme !== "file") return;
-    const config = vscode.workspace.getConfiguration("aside", document.uri);
-    const directory = path.dirname(document.uri.fsPath);
-    const configuredAssets = config.get<string>("reel.assets", "");
-    const folder = vscode.workspace.getWorkspaceFolder(document.uri);
-    const assets = configuredAssets ? path.resolve(folder?.uri.fsPath ?? directory, configuredAssets) : directory;
-    const args = ["dev", document.uri.fsPath, "--assets", assets];
-    for (const [prefix, root] of Object.entries(config.get<Record<string, string>>("modules", {}))) {
-        args.push("--module", `${prefix}=${path.resolve(folder?.uri.fsPath ?? directory, root)}`);
+    const document = vscode.window.activeTextEditor?.document;
+    // Persist a new src/main buffer before locating its owning project.
+    if (document?.languageId === "aside" && document.uri.scheme === "file"
+        && document.isDirty && !(await document.save())) return;
+    let root = document?.uri.scheme === "file"
+        ? await findProjectRoot(path.dirname(document.uri.fsPath)) : undefined;
+    let folder = document && vscode.workspace.getWorkspaceFolder(document.uri);
+    if (!root) {
+        const folders = vscode.workspace.workspaceFolders ?? [];
+        if (folders.length === 0) {
+            await vscode.window.showErrorMessage("Open a Reel project containing src/main.aside.");
+            return;
+        }
+        folder = folders.length === 1 ? folders[0] : await vscode.window.showWorkspaceFolderPick({
+            placeHolder: "Choose the Aside project to run",
+        });
+        if (!folder) return;
+        root = await findProjectRoot(folder.uri.fsPath);
     }
+    if (!root) {
+        await vscode.window.showErrorMessage("Open a Reel project containing src/main.aside.");
+        return;
+    }
+    for (const source of vscode.workspace.textDocuments) {
+        if (source.languageId === "aside" && source.uri.scheme === "file"
+            && source.isDirty && containsFile(root, source.uri.fsPath) && !(await source.save())) return;
+    }
+    const config = vscode.workspace.getConfiguration("aside", folder?.uri ?? vscode.Uri.file(root));
+    const args = ["dev"];
+    const configuredAssets = config.get<string>("reel.assets", "");
+    if (configuredAssets) args.push("--assets", path.resolve(folder?.uri.fsPath ?? root, configuredAssets));
     const task = new vscode.Task(
-        { type: "aside", file: document.uri.fsPath },
+        { type: "aside", project: root },
         folder ?? vscode.TaskScope.Global,
-        `Run ${path.basename(document.uri.fsPath)}`,
+        `Run ${path.basename(root)}`,
         "Aside",
-        new vscode.ProcessExecution(config.get<string>("reel.path", "reel"), args, { cwd: directory }),
+        new vscode.ProcessExecution(config.get<string>("reel.path", "reel"), args, { cwd: root }),
     );
     await vscode.tasks.executeTask(task);
 }
