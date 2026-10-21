@@ -1,0 +1,61 @@
+{
+  "name": "aside",
+  "displayName": "Aside",
+  "description": "Aside language support with the Rust compiler and Reel's built-in API definitions.",
+  "version": "1.0.0",
+  "publisher": "jhq223",
+  "license": "MIT",
+  "engines": { "vscode": "^1.100.0" },
+  "categories": ["Programming Languages"],
+  "main": "./dist/extension.js",
+  "activationEvents": ["onLanguage:aside"],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Syntax highlighting is available. Trust the workspace to launch its configured language server or run a story.",
+      "restrictedConfigurations": ["aside.server.path", "aside.server.args", "aside.reel.path", "aside.reel.assets", "aside.modules"]
+    },
+    "virtualWorkspaces": { "supported": false }
+  },
+  "contributes": {
+    "languages": [{
+      "id": "aside", "aliases": ["Aside", "aside"], "extensions": [".aside"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{ "language": "aside", "scopeName": "source.aside", "path": "./syntaxes/aside.tmLanguage.json" }],
+    "snippets": [{ "language": "aside", "path": "./snippets/aside.json" }],
+    "commands": [
+      { "command": "aside.restartServer", "title": "Aside: Restart Language Server" },
+      { "command": "aside.newFile", "title": "Aside: New File" },
+      { "command": "aside.runFile", "title": "Aside: Run Current File" }
+    ],
+    "configuration": {
+      "title": "Aside",
+      "properties": {
+        "aside.server.path": {
+          "type": "string", "default": "", "scope": "machine-overridable",
+          "description": "Language server executable. Empty uses the bundled reel-lsp. Use aside-lsp for standalone Aside."
+        },
+        "aside.server.args": { "type": "array", "items": { "type": "string" }, "default": [], "description": "Arguments passed directly to the language server process." },
+        "aside.modules": { "type": "object", "additionalProperties": { "type": "string" }, "default": {}, "description": "Import prefixes mapped to source directories, relative to the workspace folder." },
+        "aside.reel.path": { "type": "string", "default": "reel", "scope": "machine-overridable", "description": "Reel CLI executable used by Run Current File." },
+        "aside.reel.assets": { "type": "string", "default": "", "description": "Asset directory for Run Current File. Empty uses the current file's directory." }
+      }
+    },
+    "configurationDefaults": { "[aside]": { "editor.insertSpaces": true, "editor.tabSize": 4 } }
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "build": "node scripts/build.mjs",
+    "vscode:prepublish": "npm run check && npm run build",
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "dependencies": { "vscode-languageclient": "9.0.1" },
+  "devDependencies": {
+    "@types/node": "22.18.6",
+    "@types/vscode": "1.100.0",
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.25.10",
+    "typescript": "5.9.3"
+  }
+}

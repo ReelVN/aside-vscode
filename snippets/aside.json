@@ -1,0 +1,8 @@
+{
+  "Function": { "prefix": "fn", "body": ["fn ${1:name}(${2:value}: ${3:int}) -> ${4:int} {", "    ${0:value}", "}"], "description": "Declare a function with parameter and return types." },
+  "Main": { "prefix": "main", "body": ["fn main() {", "    $0", "}"], "description": "Reel entry function." },
+  "Model": { "prefix": "model", "body": "let ${1:state} = model({${2:count}: ${3:0}});", "description": "Create observable state." },
+  "Derived text": { "prefix": "textderive", "body": "text(value: derive(|| f\"{${1:state.count}}\"));", "description": "Display a value and update when its observed dependencies change." },
+  "Button": { "prefix": "button", "body": ["button(\"${1:Continue}\", on_click: || {", "    $0", "});"], "description": "Handle a button activation." },
+  "Input actions": { "prefix": "input", "body": ["input(actions: {", "    ${1:back}: {", "        bindings: [\"Escape\", \"PointerSecondary\", \"East\"],", "        on_release: ${2:back},", "    },", "}) {", "    $0", "}"], "description": "Bind a semantic action for keyboard, mouse and gamepad." }
+}
