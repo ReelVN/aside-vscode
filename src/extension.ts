@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "node:path";
 import { access } from "node:fs/promises";
 import type { SpawnOptionsWithoutStdio } from "node:child_process";
-import { LanguageClient, type LanguageClientOptions, type ServerOptions } from "vscode-languageclient/node";
+import { LanguageClient, State, type LanguageClientOptions, type ServerOptions } from "vscode-languageclient/node";
 import { containsFile, findProjectRoot } from "./project";
 
 interface NativeDocument {
@@ -11,6 +11,7 @@ interface NativeDocument {
 }
 
 let client: LanguageClient | undefined;
+let clientState: vscode.Disposable | undefined;
 let restart: Promise<void> = Promise.resolve();
 let watcher: vscode.FileSystemWatcher | undefined;
 
@@ -35,6 +36,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     context.subscriptions.push(output, nativeChanged);
 
     async function startServer(): Promise<void> {
+        clientState?.dispose();
+        clientState = undefined;
         if (client) {
             await client.dispose();
             client = undefined;
@@ -67,17 +70,22 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
         };
         const next = new LanguageClient("aside", "Aside", server, options);
         client = next;
+        clientState = next.onDidChangeState(({ newState }) => {
+            if (newState !== State.Running) return;
+            for (const document of vscode.workspace.textDocuments) {
+                if (document.uri.scheme === "aside-native") nativeChanged.fire(document.uri);
+            }
+        });
         try {
             await next.start();
         } catch (error) {
+            clientState.dispose();
+            clientState = undefined;
             await next.dispose();
             client = undefined;
             watcher.dispose();
             watcher = undefined;
             throw error;
-        }
-        for (const document of vscode.workspace.textDocuments) {
-            if (document.uri.scheme === "aside-native") nativeChanged.fire(document.uri);
         }
     }
 
@@ -162,6 +170,8 @@ async function runProject(): Promise<void> {
 
 export async function deactivate(): Promise<void> {
     await restart;
+    clientState?.dispose();
+    clientState = undefined;
     await client?.dispose();
     client = undefined;
     watcher?.dispose();
