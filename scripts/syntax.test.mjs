@@ -40,12 +40,14 @@ function expectScope(line, value, scope) {
 }
 
 test("incomplete declarations, ordinary variables and Unicode identifiers receive scopes", () => {
-    for (const keyword of ["fn", "class"]) expectScope(keyword, keyword, "storage.type.aside");
-    for (const name of ["value", "角色", "cafe\u0301", "𐐀名", "class·name", "class角色", "if_name"]) {
+    for (const keyword of ["fn", "class", "enum"]) expectScope(keyword, keyword, "storage.type.aside");
+    for (const name of ["value", "角色", "cafe\u0301", "𐐀名", "class·name", "class角色", "if_name", "type", "Map"]) {
         expectScope(`let ${name} = other;`, name, "variable.other.readwrite.aside");
     }
     expectScope("fn 计算(café: int) { café }", "计算", "entity.name.function.aside");
     expectScope("class 角色 {", "角色", "entity.name.type.aside");
+    expectScope("pub enum 操作 {", "操作", "entity.name.type.aside");
+    expectScope("pub type 状态 = {active: bool};", "状态", "entity.name.type.aside");
     expectScope("let value = class {};", "class", "storage.type.aside");
     expectScope("let callback: fn(int) -> int;", "fn", "storage.type.aside");
 });
@@ -54,7 +56,7 @@ test("all language keywords, built-in annotations and literal forms are highligh
     const groups = {
         "keyword.control.aside": "if else while for in loop match is await return break continue throw yield try catch finally",
         "storage.modifier.aside": "let mut async gen static pub use as",
-        "storage.type.aside": "fn class any bool int float string array table Map closure Future generator Bytes TextBuffer ByteBuffer Set Range Iterator AsyncIterator thread weakref instance Binding",
+        "storage.type.aside": "fn class enum any bool int float string array table tuple closure Future generator Bytes TextBuffer ByteBuffer Set Range Iterator AsyncIterator thread weakref instance Binding",
         "constant.language.aside": "true false null",
         "constant.numeric.aside": "0 42 1_000 0xff 0XFF 0b101 0B101 0o77 0O77 1.25 1e3 1.25e-3",
     };

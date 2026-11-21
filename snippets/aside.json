@@ -2,6 +2,8 @@
   "Function": { "prefix": "fn", "body": ["fn ${1:name}(${2:value}: ${3:int}) -> ${4:int} {", "    ${0:value}", "}"], "description": "Declare a function with parameter and return types." },
   "Main": { "prefix": "main", "body": ["fn main() {", "    $0", "}"], "description": "Reel entry function." },
   "Class": { "prefix": "class", "body": ["class ${1:Name} {", "    $0", "}"], "description": "Declare a class." },
+  "Enum": { "prefix": "enum", "body": ["enum ${1:Name} {", "    ${2:Variant},", "    ${0:Entry}(value: int),", "}"], "description": "Declare an enum with named variants and optional data." },
+  "Type alias": { "prefix": "type", "body": "type ${1:Name} = ${0:string};", "description": "Give a name to a type annotation." },
   "Constructor": { "prefix": "init", "body": ["fn init(self${1:, value: int}) {", "    $0", "}"], "description": "Declare a class constructor with an explicit receiver." },
   "Method": { "prefix": "method", "body": ["fn ${1:name}(self) {", "    $0", "}"], "description": "Declare an instance method with an explicit receiver." },
   "If": { "prefix": "if", "body": ["if ${1:condition} {", "    $0", "}"], "description": "Run a block when its condition is true." },
